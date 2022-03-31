@@ -1,0 +1,122 @@
+
+import tkinter as tk
+from tkinter import messagebox
+
+is_first_player_turn = True
+game_run = True
+
+win = 0
+draw = 0
+loss = 0
+
+
+def status():
+    if not game_run:
+        return 'Игра закончена. Нажмите "Играть заново"'
+    if is_first_player_turn:
+        return 'Ходят крестики'
+    return 'Ходят нолики'
+
+
+def score():
+    return 'Счёт - {}/{}/{}'.format(win, draw, loss)
+
+
+def has_space_left():
+    for row in range(3):
+        for col in range(3):
+            text = field[row][col]['text']
+            if text == ' ':
+                return True
+    return False
+
+
+def check_win(smb):
+    if check_line(field[0][0], field[1][1], field[2][2], smb):
+        return True
+    if check_line(field[2][0], field[1][1], field[0][2], smb):
+        return True
+    for n in range(3):
+        if check_line(field[n][0], field[n][1], field[n][2], smb):
+            return True
+        if check_line(field[0][n], field[1][n], field[2][n], smb):
+            return True
+    return False
+
+
+def check_line(c1, c2, c3, smb):
+    if c1['text'] == smb and c2['text'] == smb and c3['text'] == smb:
+        c1['background'] = c2['background'] = c3['background'] = 'green'
+        return True
+    return False
+
+
+window = tk.Tk()
+window.title('Крестики-нолики')
+field = []
+
+
+def click(row, col):
+    global is_first_player_turn
+    global win, draw, loss
+    global game_run
+
+    if game_run and field[row][col]['text'] == ' ':
+        if is_first_player_turn:
+            field[row][col].configure(text='X', background='cyan')
+            if check_win('X'):
+                win += 1
+                messagebox.showinfo('Поздравляем!',
+                                    'Выиграли крестики\n{}'.format(score()))
+                game_run = False
+        else:
+            field[row][col].configure(text='O', background='pink')
+            if check_win('O'):
+                loss += 1
+                messagebox.showinfo('Поздравляем!',
+                                    'Выиграли нолики\n{}'.format(score()))
+                game_run = False
+        if game_run and not has_space_left():
+            draw += 1
+            messagebox.showinfo('Увы!', 'Ничья\n{}'.format(score()))
+            game_run = False
+        score_label.configure(text='Счёт - {}/{}/{}'.format(win, draw, loss))
+        is_first_player_turn = not is_first_player_turn
+        status_label.configure(text=status())
+
+
+def new_game():
+    global is_first_player_turn
+    global game_run
+
+    print("Начинаем новую игру")
+    for row in range(3):
+        for col in range(3):
+            field[row][col].configure(text=' ', background='lavender')
+    is_first_player_turn = True
+    game_run = True
+
+
+for row in range(3):
+    line = []
+    for col in range(3):
+        button = tk.Button(window,
+                           text=' ',
+                           width=4,
+                           height=2,
+                           font=('Verdana', 20, 'bold'),
+                           background='lavender',
+                           command=lambda row=row, col=col: click(row, col))
+        button.grid(row=row, column=col, sticky='nsew')
+        line.append(button)
+    field.append(line)
+
+score_label = tk.Label(window, text=score(), padx=5, pady=5)
+score_label.grid(row=1, column=3, sticky='nsew')
+
+status_label = tk.Label(window, text=status(), padx=5, pady=5)
+status_label.grid(row=0, column=3, sticky='nsew')
+
+new_game_button = tk.Button(window, text='Играть заново', command=new_game)
+new_game_button.grid(row=2, column=3, sticky='nsew')
+window.mainloop()
